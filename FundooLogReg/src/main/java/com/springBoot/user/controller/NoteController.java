@@ -1,8 +1,10 @@
 package com.springBoot.user.controller;
 
 import com.springBoot.exception.Exception;
+import com.springBoot.user.dto.Collaboratordto;
 import com.springBoot.user.dto.Colordto;
 import com.springBoot.user.dto.Notedto;
+import com.springBoot.user.model.Collaborator;
 import com.springBoot.user.model.Label;
 import com.springBoot.user.model.Note;
 import com.springBoot.user.repository.NoteRepository;
@@ -23,6 +25,7 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @CrossOrigin(origins = "*")
@@ -155,24 +158,77 @@ public class NoteController {
 		return allNotes;
 
 	}
-	//Show untrash notes
+
+	// Show untrash notes
 	@GetMapping("/getUntrashNotes/")
 	public List<Note> getUntrashNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showUntrashNotes(token);
 		return allNotes;
 
 	}
+
 	@PostMapping("/noteImage/")
-	public ResponseEntity<Response> noteImage(@RequestHeader String token,@RequestParam MultipartFile image,@RequestParam Long noteid) throws IOException
-	{
-		Response response = userService.uploadImageToNote(token,image,noteid);
+	public ResponseEntity<Response> noteImage(@RequestHeader String token, @RequestParam MultipartFile image,
+			@RequestParam Long noteid) throws IOException {
+		Response response = userService.uploadImageToNote(token, image, noteid);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/getNoteImage/")
-	public ResponseEntity<Resource> getNoteImage(@RequestHeader String token,@RequestParam Long noteid) throws MalformedURLException
-	{
-		Resource response = userService.noteImages(token,noteid);
+	public ResponseEntity<Resource> getNoteImage(@RequestHeader String token, @RequestParam Long noteid)
+			throws MalformedURLException {
+		Resource response = userService.noteImages(token, noteid);
 		return new ResponseEntity<Resource>(response, HttpStatus.OK);
 	}
+	
+	//Reminder
+	@PutMapping("/reminderToNote/")
+	public ResponseEntity<Response> reminderToNote(@RequestHeader String token, @RequestParam Long noteid,
+			@RequestBody LocalDateTime time) {
+		Response response = userService.setReminder(token, noteid, time);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PutMapping("/deleteReminder/")
+	public ResponseEntity<Response> deleteReminder(@RequestHeader String token, @RequestParam Long noteid) {
+		Response response = userService.discardReminder(token, noteid);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	@GetMapping("/showReminder/")
+	public LocalDateTime showReminder(@RequestHeader String token, @RequestParam Long noteid) {
+		LocalDateTime response = userService.viewReminder(token, noteid);
+		return response;
+	}
+	@PutMapping("/checkReminder/")
+	public ResponseEntity<Response> checkReminder(@RequestHeader String token, @RequestParam Long noteid) {
+		Response response = userService.checkingReminder(token, noteid);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	//Collabortor
+	@PutMapping("/addCollaborator/")
+	public ResponseEntity<Response> addCollaborator(@RequestHeader String token, @RequestParam Long noteid,
+			@RequestBody Collaboratordto collabDto) {
+		Response response = userService.addCollaboratorsToNote(token, noteid, collabDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@PutMapping("/removeCollaboratorFromNoteId/")
+	public ResponseEntity<Response> removeCollaboratorFromNoteId(@RequestHeader String token, @RequestParam Long noteid,
+			@RequestBody Collaboratordto collabDto) {
+		Response response = userService.removeCollaboratorFromNote(token, noteid, collabDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	@GetMapping("/showCollaboratorOfNote/")
+	public List<Collaborator> showCollaboratorOfNote(@RequestHeader String token, @RequestParam Long noteid) {
+		List<Collaborator> allNotes = userService.collaboratorOfNote(token, noteid);
+		return allNotes;
+	}
+	@GetMapping("/showCollaboratorOfUser/")
+	public List<Collaborator> showCollaboratorOfUser(@RequestHeader String token) {
+		List<Collaborator> allNotes = userService.collaboratorOfUser(token);
+		return allNotes;
+	}
+
+	
 }

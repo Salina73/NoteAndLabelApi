@@ -7,8 +7,12 @@ public class Maildto
 {
 	private String emailId;
 
-	public String getEmailId() 
-	{
+	public String getEmailId() {
 		return emailId;
 	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+
 }

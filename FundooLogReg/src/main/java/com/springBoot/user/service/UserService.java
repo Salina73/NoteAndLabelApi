@@ -3,6 +3,7 @@ package com.springBoot.user.service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,12 +16,14 @@ import org.springframework.web.multipart.MultipartFile;
 import com.springBoot.exception.Exception;
 import com.springBoot.response.Response;
 import com.springBoot.response.ResponseToken;
+import com.springBoot.user.dto.Collaboratordto;
 import com.springBoot.user.dto.Colordto;
 import com.springBoot.user.dto.Labeldto;
 import com.springBoot.user.dto.Logindto;
 import com.springBoot.user.dto.Maildto;
 import com.springBoot.user.dto.Notedto;
 import com.springBoot.user.dto.Userdto;
+import com.springBoot.user.model.Collaborator;
 import com.springBoot.user.model.Label;
 import com.springBoot.user.model.Note;
 import com.springBoot.user.model.User;
@@ -104,7 +107,22 @@ public interface UserService
 
 	Resource noteImages(String token, Long noteid) throws MalformedURLException;
 
+	//Reminder
+	Response setReminder(String token, Long noteid, LocalDateTime time);
 
+	Response discardReminder(String token, Long noteid);
 	
+	LocalDateTime viewReminder(String token, Long noteid);
 	
+	//Collaborator
+	Response addCollaboratorsToNote(String token, Long noteid, Collaboratordto collabDto);
+	
+	Response removeCollaboratorFromNote(String token, Long noteid, Collaboratordto collabDto);
+
+	List<Collaborator> collaboratorOfNote(String token, Long noteid);
+
+	List<Collaborator> collaboratorOfUser(String token);
+
+	Response checkingReminder(String token, Long noteid);	
+		
 }

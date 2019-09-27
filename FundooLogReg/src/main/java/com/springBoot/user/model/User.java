@@ -28,19 +28,13 @@ public class User
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long userId;
-	
-	public List<Label> getLabel() {
-		return label;
-	}
-	public void setLabel(List<Label> label) {
-		this.label = label;
-	}
 	private String firstName;
 	private String lastName;
 	private String emailId;
 	private String password;
 	private String mobileNum;
 	private boolean isVerify;
+	
 	private String profilePic;
 	@JsonIgnore
 	@OneToMany(fetch = FetchType.LAZY, cascade =  CascadeType.ALL)
@@ -50,8 +44,24 @@ public class User
 	@OneToMany(fetch = FetchType.LAZY, cascade =  CascadeType.ALL)
     private List<Label> label;
 	
+	@JsonIgnore
+	@OneToMany(fetch = FetchType.LAZY, cascade =  CascadeType.ALL)
+    private List<Collaborator> collaborators;
+	
 	private LocalDateTime dateTime = LocalDateTime.now();
 	
+	public List<Collaborator> getCollaborators() {
+		return collaborators;
+	}
+	public void setCollaborators(List<Collaborator> collaborators) {
+		this.collaborators = collaborators;
+	}
+	public List<Label> getLabel() {
+		return label;
+	}
+	public void setLabel(List<Label> label) {
+		this.label = label;
+	}
 	public List<Note> getNotes() 
 	{
 		return notes;

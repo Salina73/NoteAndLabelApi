@@ -8,6 +8,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,10 +39,23 @@ public class Note implements Serializable
 	private boolean trashStatus;
 	
 	private String noteImages; 
+
+	
+	private LocalDateTime time;
 	@JsonIgnore
 	@ManyToMany(fetch = FetchType.LAZY, cascade =  CascadeType.ALL)
     private List<Label> label;
 	
+	@JsonIgnore
+	@ManyToMany(fetch = FetchType.LAZY, cascade =  CascadeType.ALL)
+    private List<Collaborator> userColaborators;
+
+	public List<Collaborator> getUserColaborators() {
+		return userColaborators;
+	}
+	public void setUserColaborators(List<Collaborator> userColaborators) {
+		this.userColaborators = userColaborators;
+	}
 	public List<Label> getLabel() {
 		return label;
 	}
@@ -103,5 +118,11 @@ public class Note implements Serializable
 	}
 	public void setNoteImages(String noteImages) {
 		this.noteImages = noteImages;
+	}
+	public LocalDateTime getTime() {
+		return time;
+	}
+	public void setTime(LocalDateTime time) {
+		this.time = time;
 	}
 }
