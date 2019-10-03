@@ -46,7 +46,7 @@ public class LabelController {
 	@PostMapping("/createLabel")
 	public ResponseEntity<Response> createLabel(@RequestHeader String token, @Valid @RequestBody Labeldto labeldto)
 			throws Exception, UnsupportedEncodingException {
-		Response response = userService.CreateLabel(token, labeldto);
+		Response response = userService.createLabel(token, labeldto);
 		System.out.println(response);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 

@@ -14,7 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.tools.JavaFileManager.Location;
 import javax.validation.Valid;
 
@@ -24,12 +25,14 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.springBoot.elasticSearch.ElasticSearchOfNote;
 import com.springBoot.exception.Exception;
 import com.springBoot.response.Response;
 import com.springBoot.response.ResponseToken;
@@ -91,11 +94,17 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private Environment environment;
 
+	@Autowired
+	private ElasticSearchOfNote elasticSearch;
+	
+	@Autowired
+	  private RedisTemplate<String, Object> redisTemplate;
+
 	private final Path filePath = Paths.get("/home/admin1/Pictures/Profile Pic/");
 
 	private final Path noteImagePath = Paths.get("/home/admin1/Pictures/Note Images/");
 
-	public Response Register(Userdto userDto) {
+	public Response register(Userdto userDto) {
 		User user = modelMapper.map(userDto, User.class);
 		Optional<User> alreadyPresent = userRepo.findByEmailId(user.getEmailId());
 		if (alreadyPresent.isPresent()) {
@@ -114,7 +123,7 @@ public class UserServiceImpl implements UserService {
 		return statusResponse;
 	}
 
-	public ResponseToken Login(Logindto loginDto) {
+	public ResponseToken login(Logindto loginDto) {
 
 		Optional<User> user = userRepo.findByEmailId(loginDto.getEmailId());
 
@@ -148,6 +157,7 @@ public class UserServiceImpl implements UserService {
 				response.setStatusCode(200);
 				response.setToken(token);
 				response.setStatusMessage(environment.getProperty("user.login"));
+				 redisTemplate.opsForHash().put(key, token);
 				return response;
 			} else if (status == false) {
 				response.setStatusCode(201);
@@ -231,7 +241,7 @@ public class UserServiceImpl implements UserService {
 	// CRUD for note
 
 	@Override
-	public Response Create(Notedto notedto, String token) {
+	public Response create(Notedto notedto, String token) {
 		Note note = modelMapper.map(notedto, Note.class);
 		ResponseToken response = new ResponseToken();
 		Long id = token1.decodeToken(token);
@@ -243,6 +253,7 @@ public class UserServiceImpl implements UserService {
 		noteRepository.save(note);
 		userRepo.save(user.get());
 
+		elasticSearch.createNote(note);
 		return ResponseHelper.statusResponse(200, "Note added successfully");
 	}
 
@@ -260,16 +271,24 @@ public class UserServiceImpl implements UserService {
 		note.setTitle(notedto.getTitle());
 		note.setDescription(notedto.getDescription());
 		noteRepository.save(note);
+		elasticSearch.updateNote(note, note.getNoteid());
 		return ResponseHelper.statusResponse(200, "Note updated successfully");
 	}
 
 	public Response deletenote(String token, Long noteid) {
 		Long id = token1.decodeToken(token);
-		Optional<User> user = userRepo.findById(id);
 		Note note = noteRepository.findById(noteid).orElseThrow(null);
+		// Optional<Note> notes = noteRepository.findById(noteid);
+		// ((List<Label>) notes.get().getLabel()).remove(notes.get().getLabel());
+
+		// (notes.get().getUserColaborators()).remove(notes.get().getUserColaborators());
+
+		Optional<User> user = userRepo.findById(id);
 		((List<Note>) user.get().getNotes()).remove(note);
+
 		userRepo.save(user.get());
 		noteRepository.delete(note);
+		elasticSearch.deleteNote(note.getNoteid());
 		return ResponseHelper.statusResponse(200, "Note deleted successfully");
 	}
 
@@ -476,12 +495,14 @@ public class UserServiceImpl implements UserService {
 		noteRepository.save(note);
 		return ResponseHelper.statusResponse(200, "Reminder is deleted");
 	}
+
 	@Override
 	public LocalDateTime viewReminder(String token, Long noteid) {
 		Long id = token1.decodeToken(token);
 		Note note = noteRepository.findByUseridAndNoteid(id, noteid);
 		return note.getTime();
 	}
+
 	@Override
 	public Response checkingReminder(String token, Long noteid) {
 		Long id = token1.decodeToken(token);
@@ -489,13 +510,13 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime date = LocalDateTime.now();
 		if (date.compareTo(note.getTime()) > 0) {
 			note.setTime(null);
-			noteRepository.save(note);	
+			noteRepository.save(note);
 			return ResponseHelper.statusResponse(200, "Reminder is removed");
 		}
 		return statusResponse;
-	}	
-	
-	//Collaborator
+	}
+
+	// Collaborator
 	@Override
 	public Response addCollaboratorsToNote(String token, Long noteid, Collaboratordto collabDto) {
 		Long id = token1.decodeToken(token);
@@ -522,7 +543,8 @@ public class UserServiceImpl implements UserService {
 			collaboratorRepository.save(collab);
 			userRepo.save(user.get());
 			noteRepository.save(note);
-			Utility.sendMailForCollaboration(collabDto.getEmail(), "Click here for collaboration","\n"+note.getTitle()+"/n"+note.getDescription());
+			Utility.sendMailForCollaboration(collabDto.getEmail(), "Click here for collaboration",
+					"\n" + note.getTitle() + "/n" + note.getDescription());
 			return ResponseHelper.statusResponse(200, "Collaborator is added");
 		}
 
@@ -534,40 +556,42 @@ public class UserServiceImpl implements UserService {
 		Long id = token1.decodeToken(token);
 		Note note = noteRepository.findByUseridAndNoteid(id, noteid);
 		Collaborator collab = collaboratorRepository.findByEmailAndNoteEntityId(collabDto.getEmail(), noteid).get();
-		((List<Collaborator>)note.getUserColaborators()).remove(collab);
-		
+		((List<Collaborator>) note.getUserColaborators()).remove(collab);
+
 		User users = userRepo.findById(id).get();
-		((List<Collaborator>)users.getCollaborators()).remove(collab);
-		
+		((List<Collaborator>) users.getCollaborators()).remove(collab);
+
 		noteRepository.save(note);
 		userRepo.save(users);
 		collaboratorRepository.delete(collab);
-		
-		Optional<Collaborator> collabs=collaboratorRepository.findByEmailAndNoteEntityId(collabDto.getEmail(), noteid);
-		if(!collabs.isPresent()) {
+
+		Optional<Collaborator> collabs = collaboratorRepository.findByEmailAndNoteEntityId(collabDto.getEmail(),
+				noteid);
+		if (!collabs.isPresent()) {
 			Optional<User> user = userRepo.findById(id);
-			((List<Collaborator>)user.get().getCollaborators()).remove(collab);
+			((List<Collaborator>) user.get().getCollaborators()).remove(collab);
 			userRepo.save(user.get());
 		}
 		return ResponseHelper.statusResponse(200, "Collaborator is removed from note");
 	}
+
 	@Override
 	public List<Collaborator> collaboratorOfNote(String token, Long noteid) {
 		Long id = token1.decodeToken(token);
 		Note note = noteRepository.findByUseridAndNoteid(id, noteid);
-		return (List<Collaborator>)note.getUserColaborators();
+		return (List<Collaborator>) note.getUserColaborators();
 	}
 
 	@Override
 	public List<Collaborator> collaboratorOfUser(String token) {
 		Long id = token1.decodeToken(token);
 		User user = userRepo.findById(id).get();
-		return (List<Collaborator>)user.getCollaborators();
+		return (List<Collaborator>) user.getCollaborators();
 	}
-	
+
 	// CRUD for Label
 	@Override
-	public Response CreateLabel(String token, @Valid Labeldto labeldto) {
+	public Response createLabel(String token, @Valid Labeldto labeldto) {
 
 		Optional<Label> labels = labelRepository.findByLabelName(labeldto.getLabelName());
 

@@ -1,5 +1,6 @@
 package com.springBoot.user.controller;
 
+import com.springBoot.elasticSearch.ElasticSearchOfNote;
 import com.springBoot.exception.Exception;
 import com.springBoot.user.dto.Collaboratordto;
 import com.springBoot.user.dto.Colordto;
@@ -7,6 +8,7 @@ import com.springBoot.user.dto.Notedto;
 import com.springBoot.user.model.Collaborator;
 import com.springBoot.user.model.Label;
 import com.springBoot.user.model.Note;
+import com.springBoot.user.model.User;
 import com.springBoot.user.repository.NoteRepository;
 import com.springBoot.user.repository.UserRepo;
 import com.springBoot.response.Response;
@@ -50,11 +52,14 @@ public class NoteController {
 
 	Note updatedNote;
 
+	@Autowired
+	private ElasticSearchOfNote elasticSearch;
+
 	// Create a new Note
 	@PostMapping("/createNote")
 	public ResponseEntity<Response> createNote(@RequestHeader String token, @Valid @RequestBody Notedto notedto)
 			throws Exception, UnsupportedEncodingException {
-		Response response = userService.Create(notedto, token);
+		Response response = userService.create(notedto, token);
 		System.out.println(response);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -88,6 +93,11 @@ public class NoteController {
 		List<Label> allLabels = userService.showNotesById(token, noteid);
 		return allLabels;
 
+	}
+	//Search note
+	@GetMapping("/searchNote/")
+	public List<Note> searchNote(@RequestHeader String token, @RequestParam String title) throws IOException {
+		return elasticSearch.searchNote(token, title);
 	}
 
 	// Add color to note
