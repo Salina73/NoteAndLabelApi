@@ -49,7 +49,7 @@ public class Controller
 	public ResponseEntity<Response> register(@RequestBody Userdto userDto)
 			throws Exception, UnsupportedEncodingException 
 	{
-		Response response = userService.Register(userDto);
+		Response response = userService.register(userDto);
 		System.out.println(response);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -59,7 +59,7 @@ public class Controller
 	public ResponseEntity<ResponseToken> Login(@RequestBody Logindto logindto)
 			throws Exception, UnsupportedEncodingException
 	{
-		ResponseToken response = userService.Login(logindto);
+		ResponseToken response = userService.login(logindto);
 		System.out.println(response);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

@@ -31,10 +31,10 @@ import com.springBoot.user.model.User;
 public interface UserService 
 {
 	//register
-	Response Register(Userdto userDto) throws Exception, UnsupportedEncodingException;
+	Response register(Userdto userDto) throws Exception, UnsupportedEncodingException;
 
 	//Login
-	ResponseToken Login(Logindto loginDto) throws Exception, UnsupportedEncodingException;
+	ResponseToken login(Logindto loginDto) throws Exception, UnsupportedEncodingException;
 
 	//verification of email
 	Response validateEmailId(String token) throws Exception;
@@ -49,7 +49,7 @@ public interface UserService
 	Response setpassword(String emailId, String password);
 
 	//CRUD for Note
-	Response Create(Notedto notedto, String token);
+	Response create(Notedto notedto, String token);
 
 	List<Note> showNotes(String token);
 
@@ -60,7 +60,7 @@ public interface UserService
 	List<Note> showLabelsById(String token, Long labelid);
 
 	//CRUD for Label
-	Response CreateLabel(String token, @Valid Labeldto labeldto);
+	Response createLabel(String token, @Valid Labeldto labeldto);
 	
 	List<Label> showLabels(String token);
 
@@ -123,6 +123,6 @@ public interface UserService
 
 	List<Collaborator> collaboratorOfUser(String token);
 
-	Response checkingReminder(String token, Long noteid);	
+	Response checkingReminder(String token, Long noteid);
 		
 }
