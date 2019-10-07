@@ -8,7 +8,6 @@ import com.springBoot.user.dto.Notedto;
 import com.springBoot.user.model.Collaborator;
 import com.springBoot.user.model.Label;
 import com.springBoot.user.model.Note;
-import com.springBoot.user.model.User;
 import com.springBoot.user.repository.NoteRepository;
 import com.springBoot.user.repository.UserRepo;
 import com.springBoot.response.Response;
@@ -66,15 +65,13 @@ public class NoteController {
 	}
 
 	// Get All Notes
-	@GetMapping("/getAllNotes/")
+	@GetMapping("/getAllNotes")
 	public List<Note> getAllNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showNotes(token);
 		return allNotes;
-
 	}
-
 	// Update a Note
-	@PutMapping("/updateNote/")
+	@PutMapping("/updateNote")
 	public ResponseEntity<Response> updateNote(@RequestHeader String token, @Valid @RequestBody Notedto notedto,
 			@RequestParam Long noteid) {
 		Response response = userService.updatenote(token, notedto, noteid);
@@ -82,26 +79,26 @@ public class NoteController {
 	}
 
 	// Delete a Note
-	@DeleteMapping("/deleteNote/")
+	@DeleteMapping("/deleteNote")
 	public ResponseEntity<Response> deleteNote(@RequestHeader String token, @RequestParam Long noteid) {
 		Response response = userService.deletenote(token, noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping("/getLabelsByNoteid/")
+	@GetMapping("/getLabelsByNoteid")
 	public List<Label> getLabelsByNoteid(@RequestHeader String token, @RequestParam Long noteid) {
 		List<Label> allLabels = userService.showNotesById(token, noteid);
 		return allLabels;
 
 	}
 	//Search note
-	@GetMapping("/searchNote/")
+	@GetMapping("/searchNote")
 	public List<Note> searchNote(@RequestHeader String token, @RequestParam String title) throws IOException {
 		return elasticSearch.searchNote(token, title);
 	}
 
 	// Add color to note
-	@PutMapping("/colorNote/")
+	@PutMapping("/colorNote")
 	public ResponseEntity<Response> colorNote(@RequestHeader String token, @RequestBody Colordto colordto,
 			@RequestParam Long noteid) {
 		Response response = userService.colorToNote(token, colordto, noteid);
@@ -109,7 +106,7 @@ public class NoteController {
 	}
 
 	// Pin & Unpin notes
-	@PutMapping("/pinAndUnpinNote/")
+	@PutMapping("/pinAndUnpinNote")
 	public ResponseEntity<Response> pinAndUnpinNote(@RequestHeader String token, @RequestParam Long noteid) {
 		Response response = userService.pinNote(token, noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -123,14 +120,14 @@ public class NoteController {
 	}
 
 	// Trash & untrash note
-	@PutMapping("/trashUntrashNote/")
+	@PutMapping("/trashUntrashNote")
 	public ResponseEntity<Response> trashUntrashNote(@RequestHeader String token, @RequestParam Long noteid) {
 		Response response = userService.trashNote(token, noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	// Show pin notes
-	@GetMapping("/getPinnedNotes/")
+	@GetMapping("/getPinnedNotes")
 	public List<Note> getPinnedNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showPinnedNotes(token);
 		return allNotes;
@@ -138,7 +135,7 @@ public class NoteController {
 	}
 
 	// Show unPin notes
-	@GetMapping("/getUnpinnedNotes/")
+	@GetMapping("/getUnpinnedNotes")
 	public List<Note> getUnpinnedNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showUnpinNotes(token);
 		return allNotes;
@@ -146,7 +143,7 @@ public class NoteController {
 	}
 
 	// Show archive notes
-	@GetMapping("/getArchiveNotes/")
+	@GetMapping("/getArchiveNotes")
 	public List<Note> getArchiveNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showArchiveNotes(token);
 		return allNotes;
@@ -154,7 +151,7 @@ public class NoteController {
 	}
 
 	// Show unarchive notes
-	@GetMapping("/getUnarchiveNotes/")
+	@GetMapping("/getUnarchiveNotes")
 	public List<Note> getUnarchiveNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showUnarchiveNotes(token);
 		return allNotes;
@@ -162,7 +159,7 @@ public class NoteController {
 	}
 
 	// Show trash notes
-	@GetMapping("/getTrashNotes/")
+	@GetMapping("/getTrashNotes")
 	public List<Note> getTrashNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showTrashNotes(token);
 		return allNotes;
@@ -170,21 +167,21 @@ public class NoteController {
 	}
 
 	// Show untrash notes
-	@GetMapping("/getUntrashNotes/")
+	@GetMapping("/getUntrashNotes")
 	public List<Note> getUntrashNotes(@RequestHeader String token) {
 		List<Note> allNotes = userService.showUntrashNotes(token);
 		return allNotes;
 
 	}
 
-	@PostMapping("/noteImage/")
+	@PostMapping("/noteImage")
 	public ResponseEntity<Response> noteImage(@RequestHeader String token, @RequestParam MultipartFile image,
 			@RequestParam Long noteid) throws IOException {
 		Response response = userService.uploadImageToNote(token, image, noteid);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
-	@GetMapping("/getNoteImage/")
+	@GetMapping("/getNoteImage")
 	public ResponseEntity<Resource> getNoteImage(@RequestHeader String token, @RequestParam Long noteid)
 			throws MalformedURLException {
 		Resource response = userService.noteImages(token, noteid);
@@ -192,49 +189,49 @@ public class NoteController {
 	}
 	
 	//Reminder
-	@PutMapping("/reminderToNote/")
+	@PutMapping("/reminderToNote")
 	public ResponseEntity<Response> reminderToNote(@RequestHeader String token, @RequestParam Long noteid,
 			@RequestBody LocalDateTime time) {
 		Response response = userService.setReminder(token, noteid, time);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PutMapping("/deleteReminder/")
+	@PutMapping("/deleteReminder")
 	public ResponseEntity<Response> deleteReminder(@RequestHeader String token, @RequestParam Long noteid) {
 		Response response = userService.discardReminder(token, noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	@GetMapping("/showReminder/")
+	@GetMapping("/showReminder")
 	public LocalDateTime showReminder(@RequestHeader String token, @RequestParam Long noteid) {
 		LocalDateTime response = userService.viewReminder(token, noteid);
 		return response;
 	}
-	@PutMapping("/checkReminder/")
+	@PutMapping("/checkReminder")
 	public ResponseEntity<Response> checkReminder(@RequestHeader String token, @RequestParam Long noteid) {
 		Response response = userService.checkingReminder(token, noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
 	//Collabortor
-	@PutMapping("/addCollaborator/")
+	@PutMapping("/addCollaborator")
 	public ResponseEntity<Response> addCollaborator(@RequestHeader String token, @RequestParam Long noteid,
 			@RequestBody Collaboratordto collabDto) {
 		Response response = userService.addCollaboratorsToNote(token, noteid, collabDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@PutMapping("/removeCollaboratorFromNoteId/")
+	@PutMapping("/removeCollaboratorFromNoteId")
 	public ResponseEntity<Response> removeCollaboratorFromNoteId(@RequestHeader String token, @RequestParam Long noteid,
 			@RequestBody Collaboratordto collabDto) {
 		Response response = userService.removeCollaboratorFromNote(token, noteid, collabDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	@GetMapping("/showCollaboratorOfNote/")
+	@GetMapping("/showCollaboratorOfNote")
 	public List<Collaborator> showCollaboratorOfNote(@RequestHeader String token, @RequestParam Long noteid) {
 		List<Collaborator> allNotes = userService.collaboratorOfNote(token, noteid);
 		return allNotes;
 	}
-	@GetMapping("/showCollaboratorOfUser/")
+	@GetMapping("/showCollaboratorOfUser")
 	public List<Collaborator> showCollaboratorOfUser(@RequestHeader String token) {
 		List<Collaborator> allNotes = userService.collaboratorOfUser(token);
 		return allNotes;

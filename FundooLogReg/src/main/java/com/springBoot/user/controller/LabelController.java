@@ -53,7 +53,7 @@ public class LabelController {
 	}
 
 	// Get All label
-	@GetMapping("/getAllLabel/")
+	@GetMapping("/getAllLabel")
 	public List<Label> getAllLabel(@RequestHeader String token) {
 		List<Label> allLabels = userService.showLabels(token);
 		return allLabels;
@@ -61,7 +61,7 @@ public class LabelController {
 	}
 
 	// Update a label
-	@PutMapping("/updateLabel/")
+	@PutMapping("/updateLabel")
 	public ResponseEntity<Response> updateLabel(@RequestHeader String token, @RequestParam Long labelid,
 			@Valid @RequestBody Labeldto labeldto) {
 		Response response = userService.updateLabel(token, labelid, labeldto);
@@ -69,31 +69,31 @@ public class LabelController {
 	}
 
 	// Delete a label
-	@DeleteMapping("/deleteLabel/")
+	@DeleteMapping("/deleteLabel")
 	public ResponseEntity<Response> deleteLabel(@RequestHeader String token, @RequestParam Long labelid) {
 		Response response = userService.deleteLabel(token, labelid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PostMapping("/addLabelToNote/")
+	@PostMapping("/addLabelToNote")
 	public ResponseEntity<Response> addLabelToNote(@RequestHeader String token, @Valid @RequestBody Labeldto labeldto,
 			@RequestParam Long noteid) {
 		Response response = userService.labelForNote(token, labeldto,noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	@PostMapping("/appendLabelToNote/")
+	@PostMapping("/appendLabelToNote")
 	public ResponseEntity<Response> appendLabelToNote(@RequestHeader String token, @RequestParam Long labelid,
 			@RequestParam Long noteid) {
 		Response response = userService.labelToNote(token, labelid,noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	@DeleteMapping("/removeFromNote/")
+	@DeleteMapping("/removeFromNote")
 	public ResponseEntity<Response> removeFromNote(@RequestHeader String token, @RequestParam Long labelid,@RequestParam Long noteid)
 	{
 		Response response = userService.removeLabel(token, labelid,noteid);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	@GetMapping("/getNotesByLabelid/")
+	@GetMapping("/getNotesByLabelid")
 	public List<Note> getNoteByLabelid(@RequestHeader String token,@RequestParam Long labelid) {
 		List<Note> allLabels = userService.showLabelsById(token,labelid);
 		return allLabels;

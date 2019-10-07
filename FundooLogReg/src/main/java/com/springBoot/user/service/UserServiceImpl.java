@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.tools.JavaFileManager.Location;
@@ -21,6 +22,7 @@ import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
@@ -34,6 +36,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.springBoot.elasticSearch.ElasticSearchOfNote;
 import com.springBoot.exception.Exception;
+import com.springBoot.rabbit.MessageListener;
+import com.springBoot.rabbit.RabbitMqProducer;
 import com.springBoot.response.Response;
 import com.springBoot.response.ResponseToken;
 import com.springBoot.user.dto.Collaboratordto;
@@ -51,6 +55,7 @@ import com.springBoot.user.repository.CollaboratorRepository;
 import com.springBoot.user.repository.LabelRepository;
 import com.springBoot.user.repository.NoteRepository;
 import com.springBoot.user.repository.UserRepo;
+
 import com.springBoot.utility.ResponseHelper;
 import com.springBoot.utility.TokenGeneration;
 import com.springBoot.utility.Utility;
@@ -96,14 +101,21 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private ElasticSearchOfNote elasticSearch;
-	
+
 	@Autowired
-	  private RedisTemplate<String, Object> redisTemplate;
+	private RedisTemplate<String,Object> redisTemp;
 
-	private final Path filePath = Paths.get("/home/admin1/Pictures/Profile Pic/");
+	@Value("${key}")
+	private String key;
+	
+	@Value("${profilePath}")
+	private final Path filePath=null;
 
-	private final Path noteImagePath = Paths.get("/home/admin1/Pictures/Note Images/");
-
+	private final Path noteImagePath=null;
+	
+	@Autowired 
+	private RabbitMqProducer rabbitMqProducer;
+	
 	public Response register(Userdto userDto) {
 		User user = modelMapper.map(userDto, User.class);
 		Optional<User> alreadyPresent = userRepo.findByEmailId(user.getEmailId());
@@ -114,11 +126,14 @@ public class UserServiceImpl implements UserService {
 		String password = passwordEncoder.encode(userDto.getPassword());
 		user.setPassword(password);
 		user = userRepo.save(user);
-
 		String token1 = tokenUtil.createToken(user.getUserId());
-
-		Utility.sendToken(user.getEmailId(), "Verification is required for login.Please click below link.\n",
+				
+		rabbitMqProducer.sendSimpleMessage("Your mail is sent!!!",user.getEmailId(), "Verification is required for login.Please click below link.\n",
 				"http://localhost:8080/user/" + token1);
+		
+		//Utility.sendToken(user.getEmailId(), "Verification is required for login.Please click below link.\n",
+			//	"http://localhost:8080/user/" + token1);
+		
 		statusResponse = ResponseHelper.statusResponse(200, "register successfully");
 		return statusResponse;
 	}
@@ -131,6 +146,14 @@ public class UserServiceImpl implements UserService {
 		if (user.isPresent()) {
 			String token = tokenUtil.createToken(user.get().getUserId());
 			System.out.println("password..." + (loginDto.getPassword()));
+			
+			List<String> n=new ArrayList<String>();
+			n.add(user.get().getEmailId());
+			n.add(user.get().getFirstName());
+			n.add(user.get().getLastName());
+			n.add(user.get().getProfilePic());
+			redisTemp.opsForValue().set(key, n);
+			
 			return authentication(user, loginDto.getPassword(), loginDto.getEmailId(), token);
 		} else {
 			response.setStatusCode(404);
@@ -157,7 +180,6 @@ public class UserServiceImpl implements UserService {
 				response.setStatusCode(200);
 				response.setToken(token);
 				response.setStatusMessage(environment.getProperty("user.login"));
-				 redisTemplate.opsForHash().put(key, token);
 				return response;
 			} else if (status == false) {
 				response.setStatusCode(201);
@@ -220,8 +242,14 @@ public class UserServiceImpl implements UserService {
 			String filename = StringUtils.cleanPath(image.getOriginalFilename());
 			try {
 				Files.copy(image.getInputStream(), filePath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
-				user.get().setProfilePic(filename);
-				userRepo.save(user.get());
+				user.get().setProfilePic((filePath.resolve(filename)).toString());
+				userRepo.save(user.get()); 
+				List<String> n=new ArrayList<String>();
+				n.add(user.get().getEmailId());
+				n.add(user.get().getFirstName());
+				n.add(user.get().getLastName());
+				n.add(user.get().getProfilePic());
+				redisTemp.opsForValue().set(key, n);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -237,6 +265,11 @@ public class UserServiceImpl implements UserService {
 		Resource imageResource = new UrlResource(imagePath.toUri());
 		return imageResource;
 	}
+	@Override
+	public List<String> showProfile() {
+		return (List<String>) redisTemp.opsForValue().get(key);
+	}
+
 
 	// CRUD for note
 

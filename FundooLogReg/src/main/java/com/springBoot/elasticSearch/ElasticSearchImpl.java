@@ -93,7 +93,8 @@ public class ElasticSearchImpl implements ElasticSearchOfNote {
 		Long id = tokenUtil.decodeToken(token);
 		SearchRequest searchRequest = new SearchRequest();
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
+		List<Note> notes = new ArrayList<>();
+		try {
 		searchSourceBuilder.query(QueryBuilders.boolQuery()
 				.must(QueryBuilders.termQuery("userid", id))
 				.must(QueryBuilders.queryStringQuery("*" + title + "*")
@@ -106,14 +107,17 @@ public class ElasticSearchImpl implements ElasticSearchOfNote {
 
 		SearchHit[] searchHit = searchResponse.getHits().getHits();
 
-		List<Note> notes = new ArrayList<>();
-
-		if (searchHit.length > 0) {
-
+		if (searchHit.length > 0)
+		{
 			Arrays.stream(searchHit)
-					.forEach(hit -> notes.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class)));
+					.forEach(hit -> notes
+							.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class)));
 		}
-
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		return notes;
 	}
 

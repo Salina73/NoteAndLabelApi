@@ -56,7 +56,7 @@ public class Controller
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<ResponseToken> Login(@RequestBody Logindto logindto)
+	public ResponseEntity<ResponseToken> login(@RequestBody Logindto logindto)
 			throws Exception, UnsupportedEncodingException
 	{
 		ResponseToken response = userService.login(logindto);
@@ -93,17 +93,24 @@ public class Controller
 	{
 		return userRepo.findAll();
 	}
-	@PostMapping("/uploadPic/")
+	
+	@PostMapping("/uploadPic")
 	public ResponseEntity<Response> uploadPic(@RequestHeader String token,@RequestParam MultipartFile image) throws IOException
 	{
 		Response response = userService.uploadProfilePic(token,image);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 	
-	@GetMapping("/getProfilePic/")
+	@GetMapping("/getProfilePic")
 	public ResponseEntity<Resource> getProfilePic(@RequestHeader String token) throws MalformedURLException
 	{
 		Resource response = userService.profilePic(token);
 		return new ResponseEntity<Resource>(response, HttpStatus.OK);
+	}
+	@GetMapping("/getProfile")
+	public List<String> getProfile() throws MalformedURLException
+	{
+		List<String> user = userService.showProfile();
+		return user;
 	}
 }

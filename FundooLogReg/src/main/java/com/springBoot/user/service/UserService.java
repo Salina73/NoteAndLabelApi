@@ -124,5 +124,7 @@ public interface UserService
 	List<Collaborator> collaboratorOfUser(String token);
 
 	Response checkingReminder(String token, Long noteid);
+
+	List<String> showProfile();
 		
 }
